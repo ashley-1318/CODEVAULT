@@ -155,6 +155,33 @@ export default function ComplianceMapPage() {
 
   if (!map) return null;
 
+  const exportToExcel = () => {
+    if (!map) return;
+    const headers = ["Paragraph", "Classification", "Confidence", "Regulatory Factor", "Risk Level", "Dead Code", "Needs Review"];
+    const rows = filteredEntries.map(e => [
+      e.paragraph,
+      e.classification,
+      (e.confidence * 100).toFixed(0) + "%",
+      `"${e.regulation || ''}"`,
+      e.risk_level || 'LOW',
+      e.is_dead_code ? 'Yes' : 'No',
+      e.requires_human_review ? 'Yes' : 'No'
+    ]);
+    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${map.program}_compliance_export.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToPDF = () => {
+    window.print();
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
       {/* Header */}
@@ -171,16 +198,35 @@ export default function ComplianceMapPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Regulatory Risk Score</p>
-            <p className={`text-5xl font-bold ${riskColor}`}>
+        <div className="flex flex-col sm:flex-row items-center gap-6 bg-gray-900/40 p-6 rounded-2xl border border-gray-800 shadow-xl">
+          <div className="text-center sm:text-right flex-1">
+            <p className="text-gray-500 text-xs uppercase tracking-widest mb-1 font-semibold">Regulatory Risk Score</p>
+            <p className={`text-6xl font-black ${riskColor}`}>
               {(riskScore * 100).toFixed(0)}%
             </p>
-            <RiskBadge
-              level={riskScore > 0.7 ? "HIGH" : riskScore > 0.4 ? "MEDIUM" : "LOW"}
-              size="md"
-            />
+            <div className="mt-2 flex justify-center sm:justify-end">
+               <RiskBadge
+                level={riskScore > 0.7 ? "HIGH" : riskScore > 0.4 ? "MEDIUM" : "LOW"}
+                size="md"
+              />
+            </div>
+          </div>
+          
+          <div className="flex flex-col gap-3 min-w-[200px] no-print w-full sm:w-auto">
+            <button
+              onClick={exportToExcel}
+              className="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-3 border border-emerald-500/30"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              EXPORT CSV (EXCEL)
+            </button>
+            <button
+              onClick={exportToPDF}
+              className="w-full px-6 py-3 bg-vault-600 hover:bg-vault-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-3 border border-vault-500/30"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+              EXPORT PDF REPORT
+            </button>
           </div>
         </div>
       </div>
@@ -333,7 +379,7 @@ export default function ComplianceMapPage() {
           </div>
         </div>
 
-        <ComplianceTable entries={filteredEntries} />
+        <ComplianceTable entries={filteredEntries} programName={map.program} />
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
+import ChatWidget from "@/components/ChatWidget";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -50,6 +51,8 @@ export default function RootLayout({
 
         {/* Page content with top padding for nav */}
         <main className="pt-16 min-h-screen">{children}</main>
+
+        <ChatWidget />
       </body>
     </html>
   );

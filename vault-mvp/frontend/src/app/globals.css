@@ -126,3 +126,52 @@ body {
   0%, 100% { box-shadow: 0 0 0 0 rgba(77, 114, 253, 0.4); }
   50% { box-shadow: 0 0 0 8px rgba(77, 114, 253, 0); }
 }
+
+/* Final, Simplified Print Engine for PDF Export */
+@media print {
+  @page { margin: 1cm; size: auto; }
+  
+  * {
+    color: black !important;
+    background: transparent !important;
+    font-weight: 500 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    visibility: visible !important;
+  }
+  
+  html, body, main {
+    background-color: white !important;
+    color: black !important;
+    overflow: visible !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Specific class visibility */
+  .glass-card, .badge-regulatory, .badge-commercial, .badge-risk, .badge-operational, .badge-technical, .badge-unknown {
+    border: 1px solid #777 !important;
+    background-color: #f9f9f9 !important;
+    margin-bottom: 15px !important;
+    padding: 10px !important;
+    border-radius: 8px !important;
+    break-inside: avoid !important;
+    color: black !important;
+  }
+
+  /* Kill UI noise */
+  nav, .no-print, button, footer, .chat-widget {
+    display: none !important;
+    height: 0 !important;
+    visibility: hidden !important;
+  }
+
+  /* Ensure text in charts is dark */
+  .recharts-cartesian-axis-tick-value, .recharts-legend-item-text, .recharts-label {
+    fill: black !important;
+  }
+}

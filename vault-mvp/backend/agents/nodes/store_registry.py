@@ -11,6 +11,74 @@ from backend.config import settings
 
 logger = logging.getLogger(__name__)
 
+def _store_embeddings_sync(
+    program_name: str,
+    program_id: str,
+    regulatory_risk_score: float,
+    paragraphs: list[dict],
+    classified_paragraphs: list[dict],
+):
+    import psycopg2
+    from ollama import Client
+    
+    try:
+        from backend.routers.pipeline import _program_registry
+        reg_info = _program_registry.get(program_id, {})
+        minio_path = reg_info.get("minio_path", "vault-uploads/uploaded.cbl")
+        file_name = minio_path.split("/")[-1]
+
+        ollama_client = Client(host=settings.OLLAMA_BASE_URL)
+        conn = psycopg2.connect(settings.POSTGRES_URL.replace("+asyncpg", ""))
+        cursor = conn.cursor()
+        
+        # Merge program record if missing
+        cursor.execute("SELECT id FROM programs WHERE program_id = %s", (program_id,))
+        if not cursor.fetchone():
+            cursor.execute(
+                """INSERT INTO programs (program_id, program_name, file_name, minio_path, regulatory_risk_score)
+                   VALUES (%s, %s, %s, %s, %s)""",
+                (program_id, program_name, file_name, minio_path, regulatory_risk_score)
+            )
+        else:
+            cursor.execute(
+                "UPDATE programs SET regulatory_risk_score = %s, minio_path = %s, file_name = %s WHERE program_id = %s",
+                (regulatory_risk_score, minio_path, file_name, program_id)
+            )
+            
+        # Delete existing vectors for this program to ensure idempotency
+        cursor.execute("DELETE FROM paragraph_embeddings WHERE program_id = %s", (program_id,))
+
+        for cp in classified_paragraphs:
+            para_name = cp.get("paragraph", "")
+            classification = cp.get("classification", "UNKNOWN")
+            
+            # Find original text
+            text = ""
+            for p in paragraphs:
+                if p.get("name") == para_name:
+                    text = p.get("text", "")
+                    break
+                    
+            if not text:
+                continue
+                
+            emb_res = ollama_client.embeddings(model=settings.OLLAMA_EMBED_MODEL, prompt=text)
+            embedding = emb_res["embedding"]
+            
+            cursor.execute(
+                """INSERT INTO paragraph_embeddings (program_id, paragraph_name, classification, embedding)
+                   VALUES (%s, %s, %s, %s::vector)""",
+                (program_id, para_name, classification, str(embedding))
+            )
+            
+        conn.commit()
+        cursor.close()
+        conn.close()
+        logger.info(f"[store_registry] Stored {len(classified_paragraphs)} pgvector embeddings for {program_name}")
+    except Exception as e:
+        logger.error(f"[store_registry] Error saving embeddings: {e}")
+
+
 
 def _get_neo4j_driver():
     """Create a Neo4j driver instance."""
@@ -145,6 +213,14 @@ def store_registry(state: VaultState) -> VaultState:
             classified_paragraphs=state.get("classified_paragraphs", []),
             dead_code_flags=state.get("dead_code_flags", []),
             call_statements=call_statements,
+        )
+
+        _store_embeddings_sync(
+            program_name=state.get("program_name", "UNKNOWN"),
+            program_id=state.get("program_id", ""),
+            regulatory_risk_score=state.get("regulatory_risk_score", 0.0),
+            paragraphs=parsed.get("paragraphs", []),
+            classified_paragraphs=state.get("classified_paragraphs", []),
         )
 
         logger.info("[store_registry] Neo4j write complete")
