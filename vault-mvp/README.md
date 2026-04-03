@@ -1,19 +1,34 @@
-# VAULT — Value-Aware Unified Legacy Transformation (MVP)
+# VAULT — Value-Aware Unified Legacy Transformation (v1.0)
 
-**VAULT** is an AI-powered COBOL modernization platform that classifies legacy COBOL business logic, generates regulatory compliance maps, tests dead code against SMF logs, and builds an intelligent graph of program dependencies — with human oversight built natively into the pipeline via a LangGraph interrupt checkpoint.
+**VAULT** is an enterprise-grade AI modernization platform for legacy COBOL systems. It goes beyond simple analysis by using **Agentic RAG**, **Knowledge Graphs**, and **Automated Refactoring** to transform 50-year-old mainframe logic into modern, cloud-native Python architectures.
 
 ---
 
-## 🎯 Architecture & Pipeline Overview
+## 🌟 Key Features (Implemented)
 
-VAULT operates a state-of-the-art **CHRONICLE** LangGraph Agent pipeline to process mainframe codeframes analytically and asynchronously:
+### 1. 🤖 Agentic RAG ("Chat with Codebase")
+- **Semantic Search**: Ask natural language questions about your COBOL logic (e.g., *"How is interest calculated?"*).
+- **Context-Aware Memory**: The chatbot maintains conversation history for complex, multi-turn technical inquiries.
+- **Vector Powered**: Uses `pgvector` and Ollama `nomic-embed-text` for sub-second retrieval.
 
-1. **Code Ingestion**: COBOL files are dragged-and-dropped via the Next.js UI, triggering an archive event to an S3-compatible **MinIO** bucket.
-2. **Structural Parsing (`load_program`)**: Custom Python parsing dissects the raw code into identifiable atomic units (Paragraphs, Sections, Variables).
-3. **AI Classification (`classify_logic`)**: Every code block is parsed against Groq's high-speed API (`llama-3.3-70b-versatile`) iteratively, classifying the blocks into buckets: Regulatory, Commercial, Operational, or Technical.
-4. **Dead-Code Detection (`flag_dead_code`)**: Simulates SMF logs execution monitoring integration to label unexecuted or orphaned subroutines.
-5. **Human-in-the-Loop Interruption**: Execution is forcefully halted while exposing the AI's confidence levels to the human architect operating the Next.js frontend, ensuring safe LLM generation validation.
-6. **Graph Synthesis (`store_registry`)**: Upon human signature/approval, relational nodes are committed straight back to a **Neo4j** graph database, while static tables populate **PostgreSQL**.
+### 2. 🖨️ Automated Code Translation
+- **Logic Reconstruction**: Automatically refactors legacy COBOL paragraphs into clean, PEP8-compliant **Python 3.12**.
+- **Contextual Awareness**: The translation engine understands shared variables and Copybook dependencies.
+- **Modern Patterns**: Generates Python code with explicit type hints, docstrings, and structured error handling.
+
+### 3. 📂 Multi-File & Compiler Artefact Parsing
+- **ZIP Resolution**: Upload entire system bundles (.zip) and VAULT will automatically resolve `COPY` statement dependencies.
+- **Ground Truth Parsing**: Supports IBM COBOL Compiler Listing files (`.lst`). VAULT extracts exact runtime rounding, truncation, and precision rules (NUMPROC/TRUNC/ARITH) that aren't visible in raw source code.
+
+### 4. 📑 Compliance & Export Engine
+- **Regulatory Mapping**: Automatically identifies and scores code blocks against regulations like **Basel IV**, **GDPR**, and **IFRS 9**.
+- **Premium Reports**: Export high-fidelity **PDF** and **CSV** reports for auditors and stakeholders.
+- **High-Visibility UI**: Optimized print engine handles charts and complex tables for professional documentation.
+
+### 5. 📡 Live SMF Log Ingestion (Dead Code Detection)
+- **Real-time Webhooks**: Accepts live execution logs from mainframe **SMF-70** records.
+- **Dynamic Analysis**: Compares "code on disk" vs. "code in execution" to identify 100% certain Dead Code candidates.
+- **Live Status Dashboard**: Watch your code "pulse" in real-time as paragraphs are executed on the mainframe.
 
 ---
 
@@ -21,67 +36,52 @@ VAULT operates a state-of-the-art **CHRONICLE** LangGraph Agent pipeline to proc
 
 | Component | Technology | Purpose |
 |---|---|---|
-| **LLM Provider** | Groq `llama-3.3-70b-versatile` | Ultra-fast paragraph categorization |
-| **Agent / Orchestration** | LangGraph & LangChain (Python) | Pipeline graph routing and Human-in-the-Loop checkpointing |
-| **Backend API** | FastAPI (Python 3.11) | Performant, asynchronous REST API serving jobs |
-| **Primary Database** | PostgreSQL 16 + `pgvector` | Standard relational lookups and dynamic tabular views |
-| **Graph Database** | Neo4j 5 Community | Entity mapping and semantic dependency graphing linking Code > Paragraphs > Regulations |
-| **Embeddings** | Ollama `nomic-embed-text` | Local vector modeling |
-| **Object Data Storage** | MinIO | Immutable archival storage mimicking AWS S3 for uploaded .cbl files |
-| **Frontend Dashboard** | Next.js 14, React, Tailwind CSS | Sleek, dark-mode charting environment using Recharts and Server Components |
-| **Observability** | LangSmith | Tracing end-to-end execution of AI prompt routing |
+| **Orchestration** | LangGraph & LangChain | Agentic state management & Human-in-the-loop |
+| **LLM Provider** | Groq `llama-3.3-70b` | High-speed logic classification & translation |
+| **Vector DB** | PostgreSQL 16 + `pgvector` | Semantic search & metadata storage |
+| **Graph DB** | Neo4j 5 Community | Dependency mapping & code lineage |
+| **Object Storage**| MinIO | S3-compatible archival for COBOL/Copybooks |
+| **Embeddings**   | Ollama `nomic-embed-text` | Local high-performance vector modeling |
+| **Frontend**     | Next.js 14 (React) | Premium dark-mode dashboard |
 
 ---
 
-## 🚀 Setup & Execution Instructions
+## 🚀 Quick Start
 
 **Prerequisites:** 
-- Docker Desktop (≥ 24.x)
-- Docker Compose
-- Free Groq & LangSmith API Keys
+- Docker Desktop
+- Groq API Key (Free)
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/your-org/vault-mvp.git
-cd vault-mvp
+# 1. Clone & Enter
+git clone https://github.com/ashley-1318/CODEVAULT.git
+cd CODEVAULT/vault-mvp
 
-# 2. Setup your local Environment 
+# 2. Configure
 cp .env.example .env
-# Edit .env and supply your GROQ_API_KEY and LANGSMITH_API_KEY.
+# Add your GROQ_API_KEY to .env
 
-# 3. Spin up all 7 Containerized microservices
+# 3. Run Everything
 docker compose up -d --build
-
-# 4. Wait for Initialization
-# (Wait 1-3 minutes for the local ollama_init container to pull the nomic text model).
-
-# 5. Access the Platform
-# Open http://localhost:3000 in your browser!
 ```
 
-### Navigating the Infrastructure:
-- **Main Terminal UI**: [http://localhost:3000](http://localhost:3000)
-- **FastAPI Core Specs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Neo4j Database Browser**: [http://localhost:7474](http://localhost:7474) (Creds: `neo4j` / `vaultpass123`)
-- **MinIO Backup Storage Layer**: [http://localhost:9001](http://localhost:9001) (Creds: `vaultadmin` / `vaultadmin123`)
+### Access Ports:
+- **UI**: [http://localhost:3000](http://localhost:3000)
+- **API (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Graph (Neo4j)**: [http://localhost:7474](http://localhost:7474) (`neo4j` / `vaultpass123`)
+- **Storage (MinIO)**: [http://localhost:9001](http://localhost:9001) (`vaultadmin` / `vaultadmin123`)
 
 ---
 
-## 💡 Demo Walkthrough
-
-Once running, here's how to see the architecture perform:
-
-1. **Navigate to the Upload Engine**: Head to `http://localhost:3000/upload`.
-2. **Submit Source Code**: Drag and drop the provided `sample_data/sample_loan.cbl`.
-3. **Execute CHRONICLE**: Click **"Run CHRONICLE Pipeline →"**. You will visually see the backend processing phases advance on-screen.
-4. *(Note: Groq's free-tier rate limitations are meticulously handled via built-in exponential backoff loops in the backend, meaning execution of the sample loan application takes ~45-90 seconds)*.
-5. **Approve Output**: The system halts and presents you with the categorized code blocks. Verify the regulations tagged (e.g. `Basel IV`, `IFRS 9`) and click **"Approve & Store"**.
-6. **Analyze Compliance Map / Code Graph**: You can now navigate the deeply rich **Compliance Map** for `LOAN-CALC`, view data charts mapping the distribution of dead-code versus crucial compliance code, and render SVG interactive node graphs at `/graph/[program]`.
+## 💡 Validation Suite (Sample Data)
+The system includes specialized samples to test every feature:
+- `sample_loan.cbl`: Base loan processing logic.
+- `sample_loan.lst`: Real IBM compiler listing for precision testing.
+- `sample_settlement.cbl`: Multi-program dependency test.
+- `sample_gdpr_purge.cbl`: GDPR compliance & retention logic test.
+- `multi_file_demo_pack.zip`: Full system bundle for ZIP resolution.
 
 ---
 
-## 🤝 Contributing
-Open source PRs are entirely welcomed covering issues, speed optimizations, or frontend improvements.
-
-## License
-MIT
+## ⚖️ License
+MIT - Created by **Ashley Josco**
