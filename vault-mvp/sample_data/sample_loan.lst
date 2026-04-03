@@ -1,0 +1,22 @@
+# Simulated IBM Enterprise COBOL compiler listing
+# Use this to test the artefact parser
+
+PP 5655-W32 IBM Enterprise COBOL for z/OS 6.3.0     
+Date 2026-01-15  Time 09:00:00   Page 1
+
+Options used: NUMPROC(PFD) TRUNC(BIN) ARITH(EXTEND) 
+              OPTIMIZE(FULL) LIST SOURCE MAP XREF
+
+Nested program map
+------------------
+LOAN-CALC
+
+Cross reference
+---------------
+Data names                  Defn    References
+LOAN-AMOUNT                 00047   00089 00134 00201
+BASEL-CAP-RATIO             00051   00112 00145
+CAPITAL-RATIO               00054   00112 00156 00178
+MAX-LTV-RATIO               00058   00167
+GDPR-RETENTION-DAYS         00061   00234
+INTEREST-RATE               00065   00089 00095 00101

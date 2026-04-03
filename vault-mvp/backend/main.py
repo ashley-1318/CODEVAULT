@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from backend.routers import upload, pipeline, registry, compliance, chat, translate
+from backend.routers import upload, pipeline, registry, compliance, chat, translate, logs
 from backend.minio_client import ensure_bucket_exists
 
 # Configure logging
@@ -66,6 +66,7 @@ app.include_router(registry.router)
 app.include_router(compliance.router)
 app.include_router(chat.router)
 app.include_router(translate.router)
+app.include_router(logs.router)
 
 
 @app.get("/", tags=["health"])

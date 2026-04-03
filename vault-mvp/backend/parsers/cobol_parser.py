@@ -1,5 +1,5 @@
 import re
-from typing import Any
+from typing import Any, Set
 
 
 class COBOLParser:
@@ -167,6 +167,19 @@ class COBOLParser:
 
         return paragraphs
 
+    def _extract_copy_statements(self, source: str) -> Set[str]:
+        """Extract all COPY member names from the source."""
+        # Matches COPY MEMBERNAME or COPY "MEMBERNAME" or COPY MEMBERNAME OF LIBRARY
+        copy_pattern = re.compile(
+            r"COPY\s+['\"]?([A-Z0-9\-]+)['\"]?(?:\s+OF\s+[A-Z0-9\-]+)?",
+            re.IGNORECASE,
+        )
+        found = set()
+        for match in copy_pattern.finditer(source):
+            found.add(match.group(1).upper())
+        return found
+
+
     def extract_call_statements(self, source: str) -> list[dict[str, Any]]:
         """Extract all CALL statements with their target program names."""
         calls = []
@@ -191,9 +204,11 @@ class COBOLParser:
                     "target_program": target,
                     "using_clause": using_clause,
                     "in_paragraph": paragraph,
+                    "type": "CALL"
                 }
             )
         return calls
+
 
     def extract_hardcoded_literals(self, source: str, threshold: int = 100) -> list[dict[str, Any]]:
         """
@@ -247,6 +262,7 @@ class COBOLParser:
         variables = self.extract_working_storage_variables(source)
         paragraphs = self.extract_paragraphs(source)
         call_statements = self.extract_call_statements(source)
+        copy_members = self._extract_copy_statements(source)
         hardcoded_literals = self.extract_hardcoded_literals(source)
 
         return {
@@ -258,7 +274,9 @@ class COBOLParser:
             "paragraphs": paragraphs,
             "paragraph_count": len(paragraphs),
             "call_statements": call_statements,
-            "call_count": len(call_statements),
+            "copy_members": list(copy_members),
+            "call_count": len(call_statements) + len(copy_members),
             "hardcoded_literals": hardcoded_literals,
             "hardcoded_literal_count": len(hardcoded_literals),
         }
+

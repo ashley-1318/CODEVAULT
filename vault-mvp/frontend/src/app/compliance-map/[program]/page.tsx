@@ -83,6 +83,9 @@ export default function ComplianceMapPage() {
   const [classFilter, setClassFilter] = useState<string>("ALL");
   const [riskFilter, setRiskFilter] = useState<string>("ALL");
   const [search, setSearch] = useState("");
+  const [traces, setTraces] = useState<any[]>([]);
+  const [showTrace, setShowTrace] = useState(false);
+
 
   useEffect(() => {
     const load = async () => {
@@ -95,8 +98,23 @@ export default function ComplianceMapPage() {
         setIsLoading(false);
       }
     };
+    const loadTraces = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/api/logs/trace/${programName}`);
+        if (res.ok) {
+          const data = await res.json();
+          setTraces(data.traces || []);
+        }
+      } catch (e) {
+        console.error("Trace load error:", e);
+      }
+    };
     load();
+    loadTraces();
+    const interval = setInterval(loadTraces, 5000); // Poll every 5s
+    return () => clearInterval(interval);
   }, [programName]);
+
 
   const riskScore = map?.regulatory_risk_score || 0;
   const riskColor =
@@ -155,6 +173,11 @@ export default function ComplianceMapPage() {
 
   if (!map) return null;
 
+  const goBack = () => {
+     window.history.back();
+  };
+
+
   const exportToExcel = () => {
     if (!map) return;
     const headers = ["Paragraph", "Classification", "Confidence", "Regulatory Factor", "Risk Level", "Dead Code", "Needs Review"];
@@ -183,7 +206,25 @@ export default function ComplianceMapPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
+    <div className="max-w-7xl mx-auto px-6 py-6 space-y-8">
+      {/* Navigation & Breadcrumbs */}
+      <div className="flex items-center justify-between no-print">
+        <button 
+          onClick={goBack}
+          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
+        >
+          <div className="p-2 rounded-lg bg-gray-900 border border-gray-800 group-hover:border-gray-700">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+          </div>
+          <span className="text-sm font-medium">Back to Registry</span>
+        </button>
+        <div className="flex items-center gap-2 text-xs text-gray-500 font-mono">
+           <span>REGISTRY</span>
+           <span>/</span>
+           <span className="text-vault-400">{map.program}</span>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
         <div>
@@ -256,7 +297,16 @@ export default function ComplianceMapPage() {
           sub="low-confidence classifications"
           highlight={map.summary.requires_human_review_count > 0 ? "amber" : "green"}
         />
+        <div className="glass-card p-5 relative overflow-hidden group cursor-pointer" onClick={() => setShowTrace(!showTrace)}>
+          <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-100 transition-opacity">
+             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+          </div>
+          <p className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-2">Live Status</p>
+          <p className="text-3xl font-bold text-emerald-400">ONLINE</p>
+          <p className="text-gray-500 text-xs mt-1">{traces.length} recent executions</p>
+        </div>
       </div>
+
 
       {/* Charts row */}
       <div className="grid lg:grid-cols-2 gap-6">
@@ -312,24 +362,36 @@ export default function ComplianceMapPage() {
       </div>
 
       {/* Regulatory obligations */}
-      {map.regulatory_obligations.length > 0 && (
-        <div className="glass-card p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Regulatory Obligations</h2>
-          <div className="flex flex-wrap gap-3">
-            {map.regulatory_obligations.map((ob, i) => (
-              <div
-                key={i}
-                className="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20"
-              >
-                <p className="text-red-300 font-medium text-sm">{ob.regulation}</p>
-                <p className="text-gray-500 text-xs mt-0.5">
-                  {ob.paragraph_count} paragraph{ob.paragraph_count !== 1 ? "s" : ""}
-                </p>
-              </div>
-            ))}
+      {showTrace && (
+        <div className="glass-card p-6 border-emerald-500/30 bg-emerald-500/5 transition-all">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-emerald-400 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Live Mainframe Log Stream (SMF-70)
+            </h2>
+            <button onClick={() => setShowTrace(false)} className="text-gray-500 hover:text-white text-sm">Close</button>
+          </div>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {traces.length === 0 ? (
+              <p className="text-gray-500 text-center py-10 italic">Waiting for incoming logs from mainframe bulkhead...</p>
+            ) : (
+              traces.map((t: any, i) => (
+                <div key={i} className="flex justify-between items-center bg-gray-950/50 p-3 rounded-lg border border-gray-800 font-mono text-xs">
+                   <div className="flex items-center gap-4">
+                      <span className="text-vault-400">[{new Date(t.timestamp).toLocaleTimeString()}]</span>
+                      <span className="text-gray-300 font-bold uppercase">{t.paragraph}</span>
+                   </div>
+                   <div className="flex items-center gap-4">
+                      <span className="text-gray-500">Hits: <span className="text-gray-200">{t.count}</span></span>
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] border border-emerald-500/20">EXECUTED</span>
+                   </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
+
 
       {/* Filterable entries table */}
       <div className="glass-card overflow-hidden">

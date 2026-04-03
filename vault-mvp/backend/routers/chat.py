@@ -13,9 +13,15 @@ router = APIRouter(
     tags=["chat"],
 )
 
+class ChatMessage(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+
 class ChatRequest(BaseModel):
     query: str
     program_id: str | None = None
+    history: list[ChatMessage] = []
+
 
 class ChatResponse(BaseModel):
     answer: str
@@ -97,30 +103,42 @@ async def chat_with_codebase(request: ChatRequest):
         context_str = "\n\n".join(context_blocks)
         
         # 4. Synthesize with LLM
-        prompt = f"""You are an advanced COBOL AI modernization agent. 
+        messages = [
+            {
+                "role": "system", 
+                "content": f"""You are an advanced COBOL AI modernization agent. 
 You are answering a user's question based on the semantic search of their codebase.
+Always cite the specific paragraph name.
 
 CONTEXT (Top relevant paragraphs):
 {context_str}
-
-USER QUERY:
-{request.query}
-
-Instructions:
-1. Answer the question specifically using the context provided.
-2. If the context does not contain the answer, say so explicitly.
-3. Be professional, concise, and technical. Reference paragraph names where applicable.
 """
+            }
+        ]
+
+        # Add conversation history
+        for msg in request.history[-6:]:  # last 6 messages
+            messages.append({
+                "role": msg.role,
+                "content": msg.content
+            })
+
+        # Add current message
+        messages.append({
+            "role": "user",
+            "content": request.query
+        })
 
         groq_client = Groq(api_key=settings.GROQ_API_KEY)
         response = groq_client.chat.completions.create(
             model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
             temperature=0.3,
             max_tokens=1000
         )
         
         answer = response.choices[0].message.content.strip()
+
         
         return ChatResponse(answer=answer, sources=sources)
         

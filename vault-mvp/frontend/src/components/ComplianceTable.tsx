@@ -167,53 +167,63 @@ export default function ComplianceTable({ entries, programName }: ComplianceTabl
 
       {/* Translation Modal Overlap */}
       {translateModal && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="bg-gray-900 border border-gray-700 w-full max-w-5xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
-            <div className="p-5 border-b border-gray-800 flex justify-between items-center bg-gray-900/50 rounded-t-2xl">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <span className="text-vault-400">Translation:</span>
-                <span className="font-mono text-gray-400 text-sm">{translateModal}</span> 
-                → 
-                <span className="text-yellow-400 text-sm font-mono">Python</span>
-              </h2>
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-10">
+          <div className="bg-gray-900 border border-gray-700 w-full max-w-6xl rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-900/80 sticky top-0 z-10 rounded-t-3xl backdrop-blur-sm">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 mb-1">
+                   <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                   <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Logic Reconstruction</span>
+                </div>
+                <h2 className="text-xl font-bold text-white flex items-center gap-3">
+                  <span className="text-vault-400">{translateModal}</span> 
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+                  <span className="text-yellow-400">Python 3.12</span>
+                </h2>
+              </div>
               <button 
                 onClick={() => setTranslateModal(null)}
-                className="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 p-2 rounded-lg transition-colors"
+                className="text-gray-400 hover:text-white bg-gray-800/50 hover:bg-red-500/20 p-3 rounded-2xl transition-all border border-gray-700/50"
               >
-                ✕
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
             </div>
+
             
-            <div className="p-6 overflow-y-auto flex-1 h-full">
+            <div className="p-8 overflow-y-auto flex-1 h-full bg-[#111] rounded-b-3xl">
               {isTranslating ? (
                 <div className="flex flex-col items-center justify-center h-64 text-gray-400 space-y-4">
-                  <div className="w-8 h-8 border-4 border-vault-500 border-t-transparent rounded-full animate-spin" />
-                  <p>AI Architect is translating {translateModal} to Python via Groq...</p>
+                  <div className="w-10 h-10 border-4 border-vault-500 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm font-medium tracking-wide">TRANSFORMING LEGACY BLOCKS...</p>
                 </div>
               ) : translationResult ? (
-                <div className="grid grid-cols-2 gap-6 h-full">
-                  <div className="h-full flex flex-col">
-                    <h3 className="text-sm font-medium text-gray-400 mb-2 uppercase tracking-wide">Original COBOL</h3>
-                    <pre className="bg-[#1e1e1e] p-4 rounded-xl text-xs sm:text-sm text-gray-300 overflow-auto border border-gray-800 font-mono shadow-inner flex-1 whitespace-pre-wrap">
+                <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 h-full min-h-0">
+                  <div className="flex flex-col min-h-0">
+                    <h3 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-[0.2em]">Source logic</h3>
+                    <div className="flex-1 min-h-0 overflow-hidden rounded-2xl border border-gray-800 bg-gray-950/50">
+                      <pre className="h-full w-full p-6 text-sm text-gray-300 font-mono overflow-auto scrollbar-thin scrollbar-thumb-gray-700 whitespace-pre-wrap">
 {translationResult.cobol}
-                    </pre>
+                      </pre>
+                    </div>
                   </div>
-                  <div className="h-full flex flex-col">
-                    <h3 className="text-sm font-medium text-yellow-400 mb-2 uppercase tracking-wide flex items-center gap-2">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M14.228 17.534v1.89h-.002v1.383c0 2.222-2.146 3.193-2.146 3.193s-1.897.41-3.957.195c-2.19-.23-3.033-1.076-3.033-1.076-1.002-.998-1.258-2.67-1.258-2.67V18.17s-.016-1.127.42-2.102c.437-.978 1.488-1.5 1.488-1.5.023-.005 3.15-.316 4.708-.4.996-.058 1.94-.124 1.94-.124h.02s1.472-.05 1.83.69c0 0 .195.344.183 1.054a1.8 1.8 0 01-.195.746H11.2s-2.072-.116-2.072 1.48c0 1.597 2.072 1.424 2.072 1.424h3.028zm1.096-7.863V7.79H15.323v-1.38c0-2.22 2.146-3.192 2.146-3.192s1.898-.413 3.958-.196c2.19.23 3.033 1.077 3.033 1.077 1.002.997 1.258 2.67 1.258 2.67v2.285s.016 1.127-.42 2.102c-.437.977-1.488 1.5-1.488 1.5-.023.004-3.15.316-4.708.4-.996.057-1.94.123-1.94.123h-.02s-1.472.05-1.83-.69c0 0-.195-.344-.183-1.054a1.8 1.8 0 01.195-.745h3.027s2.072.115 2.072-1.48c0-1.596-2.07-1.423-2.07-1.423h-3.026z"/></svg>
-                      Modern Python
-                    </h3>
-                    <pre className="bg-[#1e1e1e] p-4 rounded-xl text-xs sm:text-sm text-yellow-100 overflow-auto border border-gray-800 font-mono shadow-inner flex-1 whitespace-pre-wrap">
+                  <div className="flex flex-col min-h-0">
+                    <h3 className="text-xs font-bold text-yellow-500/80 mb-3 uppercase tracking-[0.2em]">Refactored logic</h3>
+                     <div className="flex-1 min-h-0 overflow-hidden rounded-2xl border border-yellow-500/10 bg-gray-950/50">
+                      <pre className="h-full w-full p-6 text-sm text-yellow-100/90 font-mono overflow-auto scrollbar-thin scrollbar-thumb-yellow-700/30 whitespace-pre-wrap">
 {translationResult.target}
-                    </pre>
+                      </pre>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center h-64 text-red-400">
-                  <p>Failed to generate translation. Check backend logs.</p>
+                <div className="flex flex-col items-center justify-center h-64 text-red-400 gap-2">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                  <p className="font-semibold">Architect Engine Offline</p>
+                  <p className="text-xs text-gray-500">Could not connect to translation microservice.</p>
                 </div>
               )}
             </div>
+
             
           </div>
         </div>
