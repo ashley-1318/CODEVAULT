@@ -28,11 +28,12 @@ async def upload_cobol(file: UploadFile = File(...)):
     filename = file.filename or "unknown.cbl"
     is_zip = filename.lower().endswith(".zip")
     
-    if not filename.lower().endswith((".cbl", ".cob", ".zip")):
+    if not filename.lower().endswith((".cbl", ".cob", ".zip", ".cpy", ".copy")):
         raise HTTPException(
             status_code=400,
-            detail=f"Only .cbl, .cob, or .zip files are accepted. Got: {filename}",
+            detail=f"Only .cbl, .cob, .zip, .cpy, or .copy files are accepted. Got: {filename}",
         )
+
 
     try:
         raw_bytes = await file.read()
@@ -84,6 +85,11 @@ async def upload_cobol(file: UploadFile = File(...)):
         raw_cobol = raw_bytes.decode("utf-8", errors="replace")
         parser = COBOLParser(raw_cobol)
         parsed = parser.parse()
+        
+        # If it's a copybook, it won't have a PROGRAM-ID. Use filename instead.
+        if parsed.get("program_name") == "UNKNOWN" and filename.lower().endswith((".cpy", ".copy")):
+            parsed["program_name"] = filename.upper().split(".")[0]
+            
         main_program_name = parsed.get("program_name", "UNKNOWN")
         m_path = upload_file(
             object_name=f"{program_id}/{filename}",
@@ -95,6 +101,7 @@ async def upload_cobol(file: UploadFile = File(...)):
         parsed["file_name"] = filename
         parsed["minio_path"] = m_path
         aggregated_parsed["programs"].append(parsed)
+
 
     return UploadResponse(
         program_id=program_id,

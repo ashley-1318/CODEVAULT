@@ -1,6 +1,6 @@
-# VAULT — Value-Aware Unified Legacy Transformation (v1.0)
+# VAULT — Value-Aware Unified Legacy Transformation (v1.1)
 
-**VAULT** is an enterprise-grade AI modernization platform for legacy COBOL systems. It goes beyond simple analysis by using **Agentic RAG**, **Knowledge Graphs**, and **Automated Refactoring** to transform 50-year-old mainframe logic into modern, cloud-native Python architectures.
+**VAULT** is an enterprise-grade AI modernization platform for legacy COBOL systems. It goes beyond simple analysis by using **Agentic RAG**, **Knowledge Graphs**, and **Multi-Language Refactoring** to transform 50-year-old mainframe logic into modern, cloud-native architectures.
 
 ---
 
@@ -11,12 +11,14 @@
 - **Context-Aware Memory**: The chatbot maintains conversation history for complex, multi-turn technical inquiries.
 - **Vector Powered**: Uses `pgvector` and Ollama `nomic-embed-text` for sub-second retrieval.
 
-### 2. 🖨️ Automated Code Translation
-- **Logic Reconstruction**: Automatically refactors legacy COBOL paragraphs into clean, PEP8-compliant **Python 3.12**.
-- **Contextual Awareness**: The translation engine understands shared variables and Copybook dependencies.
-- **Modern Patterns**: Generates Python code with explicit type hints, docstrings, and structured error handling.
+### 2. 🖨️ Multi-Linguistic Translation (Expert Polyglot)
+- **🚀 One-Click Refactor**: Automatically transforms legacy COBOL paragraphs into modern logic.
+- **Target Languages**: Supports instant translation into **Python 3.12**, **Java (Spring Boot)**, and **TypeScript**.
+- **Context-Aware**: The engine understands shared variables, PIC clauses, and Copybook dependencies during translation.
+- **Copy to Clipboard**: One-click code extraction for developers.
 
-### 3. 📂 Multi-File & Compiler Artefact Parsing
+### 3. 📂 Multi-File, Copybook & Compiler Artefact Parsing
+- **Individual Copybook Support**: Upload `.cpy` and `.copy` files directly for data definition analysis.
 - **ZIP Resolution**: Upload entire system bundles (.zip) and VAULT will automatically resolve `COPY` statement dependencies.
 - **Ground Truth Parsing**: Supports IBM COBOL Compiler Listing files (`.lst`). VAULT extracts exact runtime rounding, truncation, and precision rules (NUMPROC/TRUNC/ARITH) that aren't visible in raw source code.
 
@@ -65,11 +67,13 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-### Access Ports:
-- **UI**: [http://localhost:3000](http://localhost:3000)
-- **API (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Graph (Neo4j)**: [http://localhost:7474](http://localhost:7474) (`neo4j` / `vaultpass123`)
-- **Storage (MinIO)**: [http://localhost:9001](http://localhost:9001) (`vaultadmin` / `vaultadmin123`)
+### Access Ports & Credentials:
+| Service | URL | Credentials |
+|---|---|---|
+| **Vault UI** | [http://localhost:3000](http://localhost:3000) | - |
+| **API Backend** | [http://localhost:8000/docs](http://localhost:8000/docs) | - |
+| **Neo4j Graph** | [http://localhost:7474](http://localhost:7474) | `neo4j` / `vaultpass123` |
+| **MinIO Console** | [http://localhost:9001](http://localhost:9001) | `vaultadmin` / `vaultadmin123` |
 
 ---
 

@@ -93,9 +93,10 @@ export default function UploadPage() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { "text/plain": [".cbl", ".cob"] },
+    accept: { "text/plain": [".cbl", ".cob", ".cpy", ".copy"] },
     maxFiles: 1,
   });
+
 
   // ── Polling pipeline status ───────────────────────────────────────────────
   useEffect(() => {
@@ -205,10 +206,12 @@ export default function UploadPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Upload COBOL Program</h1>
         <p className="text-gray-400">
-          Upload a <code className="text-vault-400 font-mono text-sm">.cbl</code> or{" "}
-          <code className="text-vault-400 font-mono text-sm">.cob</code> file to begin the
+          Upload a <code className="text-vault-400 font-mono text-sm">.cbl</code>,{" "}
+          <code className="text-vault-400 font-mono text-sm">.cob</code>, or{" "}
+          <code className="text-vault-400 font-mono text-sm">.cpy</code> file to begin the
           CHRONICLE analysis pipeline.
         </p>
+
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
@@ -234,8 +237,9 @@ export default function UploadPage() {
                   Drag & drop your COBOL file here
                 </p>
                 <p className="text-gray-500 text-sm">
-                  or click to browse — accepts .cbl and .cob files
+                  or click to browse — accepts .cbl, .cob, .cpy, and .copy files
                 </p>
+
               </>
             )}
           </div>
@@ -244,7 +248,10 @@ export default function UploadPage() {
           {file && (
             <div className="glass-card p-4 flex items-center gap-4 animate-slide-up">
               <div className="w-10 h-10 rounded-lg bg-vault-600/30 border border-vault-500/30 flex items-center justify-center">
-                <span className="text-vault-300 font-mono text-xs font-bold">CBL</span>
+                <span className="text-vault-300 font-mono text-xs font-bold uppercase">
+                  {file.name.split(".").pop()}
+                </span>
+
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white font-medium truncate">{file.name}</p>

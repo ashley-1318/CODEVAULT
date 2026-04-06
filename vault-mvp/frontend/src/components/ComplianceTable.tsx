@@ -58,6 +58,18 @@ export default function ComplianceTable({ entries, programName }: ComplianceTabl
   const [translateModal, setTranslateModal] = useState<string | null>(null);
   const [translationResult, setTranslationResult] = useState<{ cobol: string; target: string } | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [targetLang, setTargetLang] = useState<"python" | "java" | "typescript">("python");
+  const [copying, setCopying] = useState(false);
+
+  const handleCopy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopying(true);
+      setTimeout(() => setCopying(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy!", err);
+    }
+  };
 
   const handleTranslate = async (paraName: string) => {
     if (!programName) return;
@@ -69,12 +81,17 @@ export default function ComplianceTable({ entries, programName }: ComplianceTabl
       const res = await fetch("http://localhost:8000/api/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ program_name: programName, paragraph_name: paraName, target_language: "python" }),
+        body: JSON.stringify({ 
+          program_name: programName, 
+          paragraph_name: paraName, 
+          target_language: targetLang 
+        }),
       });
       if (res.ok) {
         const data = await res.json();
         setTranslationResult({ cobol: data.original_cobol, target: data.translated_code });
       }
+
     } catch (e) {
       console.error(e);
     } finally {
@@ -154,9 +171,10 @@ export default function ComplianceTable({ entries, programName }: ComplianceTabl
                 {programName && !entry.is_dead_code && (
                   <button
                     onClick={() => handleTranslate(entry.paragraph)}
-                    className="text-xs bg-vault-600/20 text-vault-400 hover:bg-vault-600/40 px-3 py-1.5 rounded-lg border border-vault-500/20 font-medium transition-colors whitespace-nowrap"
+                    className="group relative text-xs bg-vault-600/20 text-vault-400 hover:bg-vault-600/40 px-3 py-1.5 rounded-lg border border-vault-500/20 font-medium transition-all whitespace-nowrap flex items-center gap-2"
                   >
-                    To Python
+                    🚀 Refactor
+                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-vault-400 rounded-full animate-ping" />
                   </button>
                 )}
               </td>
@@ -178,8 +196,26 @@ export default function ComplianceTable({ entries, programName }: ComplianceTabl
                 <h2 className="text-xl font-bold text-white flex items-center gap-3">
                   <span className="text-vault-400">{translateModal}</span> 
                   <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
-                  <span className="text-yellow-400">Python 3.12</span>
+                  <div className="flex gap-1">
+                    {(["python", "java", "typescript"] as const).map((lang) => (
+                      <button
+                        key={lang}
+                        onClick={() => {
+                          setTargetLang(lang);
+                          handleTranslate(translateModal!);
+                        }}
+                        className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase transition-all tracking-wider border ${
+                          targetLang === lang 
+                            ? "bg-yellow-400 text-black border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]" 
+                            : "bg-gray-800 text-gray-400 border-gray-700 hover:text-white"
+                        }`}
+                      >
+                        {lang}
+                      </button>
+                    ))}
+                  </div>
                 </h2>
+
               </div>
               <button 
                 onClick={() => setTranslateModal(null)}
@@ -206,14 +242,38 @@ export default function ComplianceTable({ entries, programName }: ComplianceTabl
                       </pre>
                     </div>
                   </div>
-                  <div className="flex flex-col min-h-0">
-                    <h3 className="text-xs font-bold text-yellow-500/80 mb-3 uppercase tracking-[0.2em]">Refactored logic</h3>
+                  <div className="flex flex-col min-h-0 relative">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-xs font-bold text-yellow-500/80 uppercase tracking-[0.2em]">Refactored {targetLang}</h3>
+
+                      <button
+                        onClick={() => handleCopy(translationResult.target)}
+                        className={`text-[10px] px-2 py-1 rounded border transition-all flex items-center gap-1.5 ${
+                          copying 
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
+                            : "bg-gray-800/50 border-gray-700 text-gray-400 hover:text-white hover:bg-gray-700"
+                        }`}
+                      >
+                        {copying ? (
+                          <>
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
+                            COPIED
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                            COPY CODE
+                          </>
+                        )}
+                      </button>
+                    </div>
                      <div className="flex-1 min-h-0 overflow-hidden rounded-2xl border border-yellow-500/10 bg-gray-950/50">
                       <pre className="h-full w-full p-6 text-sm text-yellow-100/90 font-mono overflow-auto scrollbar-thin scrollbar-thumb-yellow-700/30 whitespace-pre-wrap">
 {translationResult.target}
                       </pre>
                     </div>
                   </div>
+
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-64 text-red-400 gap-2">
